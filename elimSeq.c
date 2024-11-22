@@ -2,89 +2,137 @@
 #include <stdlib.h>
 #include <math.h>
 
-// Função para imprimir uma matriz aumentada
-void printMatrix(double **matrix, int n, int m) {
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            printf("%8.3lf ", matrix[i][j]);
-        }
-        printf("\n");
+double** ler_matriz_aumentada(const char* nome_arquivo, int* linhas, int* colunas) {
+    FILE* arquivo = fopen(nome_arquivo, "r");
+    if (arquivo == NULL) {
+        perror("Erro ao abrir o arquivo");
+        exit(EXIT_FAILURE);
     }
-    printf("\n");
-}
 
-// Função para realizar a eliminação gaussiana
-void gaussianElimination(double **matrix, int n) {
-    for (int k = 0; k < n - 1; k++) {
-        // Pivotamento parcial
-        for (int i = k + 1; i < n; i++) {
-            if (fabs(matrix[k][k]) < 1e-9) {
-                printf("Erro: Pivot nulo. A matriz não pode ser resolvida.\n");
-                return;
+    *linhas = 0;
+    *colunas = 0;
+    double temp;
+
+    while (!feof(arquivo)) {
+        int count_colunas = 0;
+        char linha[1024];
+        if (fgets(linha, sizeof(linha), arquivo)) {
+            char* ptr = linha;
+            while (sscanf(ptr, "%lf%n", &temp, &count_colunas) == 1) {
+                ptr += count_colunas;
+                (*colunas)++;
             }
-            double factor = matrix[i][k] / matrix[k][k];
-            for (int j = k; j <= n; j++) {
-                matrix[i][j] -= factor * matrix[k][j];
-            }
+            (*linhas)++;
         }
     }
+    *colunas /= *linhas;
+
+    rewind(arquivo);
+
+    double** matriz = (double**)malloc(*linhas * sizeof(double*));
+    for (int i = 0; i < *linhas; i++) {
+        matriz[i] = (double*)malloc(*colunas * sizeof(double));
+    }
+
+    for (int i = 0; i < *linhas; i++) {
+        for (int j = 0; j < *colunas; j++) {
+            fscanf(arquivo, "%lf", &matriz[i][j]);
+        }
+    }
+
+    fclose(arquivo);
+
+    return matriz;
 }
 
-// Função para realizar a substituição regressiva e encontrar o vetor de soluções
-void backSubstitution(double **matrix, int n, double *solution) {
+void liberar_matriz(double** matriz, int linhas) {
+    for (int i = 0; i < linhas; i++) {
+        free(matriz[i]);
+    }
+    free(matriz);
+}
+
+void substituicao_regressiva(double** matriz, int n, double* solucao) {
     for (int i = n - 1; i >= 0; i--) {
-        solution[i] = matrix[i][n];
+        solucao[i] = matriz[i][n];
         for (int j = i + 1; j < n; j++) {
-            solution[i] -= matrix[i][j] * solution[j];
+            solucao[i] -= matriz[i][j] * solucao[j];
         }
-        solution[i] /= matrix[i][i];
+        solucao[i] /= matriz[i][i];
     }
 }
 
-int main() {
-    int n;
-    printf("Entre com o tamanho da matriz: ");
-    scanf("%d", &n);
+double* eliminacao_gaussiana(double** matriz, int n) {
+    for (int k = 0; k < n; k++) {
+        if (fabs(matriz[k][k]) < 1e-9) {
+            fprintf(stderr, "Erro: pivô zero encontrado na linha %d.\n", k);
+            exit(EXIT_FAILURE);
+        }
 
-    // Alocar matriz aumentada
-    double **matrix = (double **)malloc(n * sizeof(double *));
-    for (int i = 0; i < n; i++) {
-        matrix[i] = (double *)malloc((n + 1) * sizeof(double));
-    }
-
-    // Ler a matriz aumentada
-    printf("Entre com os elementos da matriz aumentada (%d x %d):\n", n, n + 1);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j <= n; j++) {
-            scanf("%lf", &matrix[i][j]);
+        for (int i = k + 1; i < n; i++) {
+            double fator = matriz[i][k] / matriz[k][k];
+            for (int j = k; j <= n; j++) {
+                matriz[i][j] -= fator * matriz[k][j];
+            }
         }
     }
 
-    printf("\nMatriz aumentada inicial:\n");
-    printMatrix(matrix, n, n + 1);
+    double* solucao = (double*)malloc(n * sizeof(double));
 
-    // Eliminação Gaussiana
-    gaussianElimination(matrix, n);
+    substituicao_regressiva(matriz, n, solucao);
 
-    printf("Matriz triangular superior:\n");
-    printMatrix(matrix, n, n + 1);
+    return solucao;
+}
 
-    // Substituição regressiva
-    double *solution = (double *)malloc(n * sizeof(double));
-    backSubstitution(matrix, n, solution);
-
-    // Imprimir soluções
-    printf("Soluções:\n");
-    for (int i = 0; i < n; i++) {
-        printf("x[%d] = %.3lf\n", i, solution[i]);
+void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* solucao, const char *nomeArquivo) {
+    FILE *arquivo = fopen(nomeArquivo, "w");
+    
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        return;
+    }
+    
+    fprintf(arquivo, "Matriz\n");
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            fprintf(arquivo, "%.3lf", matriz[i][j]);
+            if (j < colunas - 1) {
+                fprintf(arquivo, " ");
+            }
+        }
+        fprintf(arquivo, "\n");
     }
 
-    // Liberar memória
-    for (int i = 0; i < n; i++) {
-        free(matrix[i]);
+    fprintf(arquivo, "\nSolucao\n");
+    for(int i = 0; i < linhas; i++){
+        fprintf(arquivo, "%.3lf\n", *(solucao+i));
     }
-    free(matrix);
-    free(solution);
+    
+    fclose(arquivo);
+}
+
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Use: %s <arquivo_entrada.txt> <arquivo_saida.txt>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    const char* nome_arquivo = argv[1];
+    int linhas, colunas;
+
+    double** matriz = ler_matriz_aumentada(nome_arquivo, &linhas, &colunas);
+
+    if (colunas != linhas + 1) {
+        fprintf(stderr, "Erro: a matriz no arquivo não é uma matriz aumentada válida (%dx%d).\n", linhas, colunas);
+        liberar_matriz(matriz, linhas);
+        return EXIT_FAILURE;
+    }
+
+    double* solucao = eliminacao_gaussiana(matriz, linhas);
+
+    escreve_matriz_arquivo(linhas, colunas, matriz, solucao, argv[2]);
+
+    liberar_matriz(matriz, linhas);
 
     return 0;
 }
