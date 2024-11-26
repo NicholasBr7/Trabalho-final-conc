@@ -70,6 +70,7 @@ int main(int argc, char *argv[]) {
     fclose(descritorTexto);
 
     // escreve a matriz no arquivo binário
+    /*
     descritorBinario = fopen("matriz.bin", "wb");
     if (!descritorBinario) {
         printf("Erro de abertura do arquivo binário");
@@ -86,7 +87,9 @@ int main(int argc, char *argv[]) {
     }
 
     // finaliza o uso das variáveis
-    fclose(descritorBinario);
+    fclose(descritorBinario);  
+     */
+    
     free(matriz);
     return 0;
 }
