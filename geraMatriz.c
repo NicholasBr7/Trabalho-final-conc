@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define IMPRIME
+//#define IMPRIME
 
 int main(int argc, char *argv[]) {
     float *matriz; // matriz que será gerada
@@ -20,12 +20,12 @@ int main(int argc, char *argv[]) {
     FILE *descritorBinario, *descritorTexto; // descritores dos arquivos de saída
     size_t ret; // retorno da função de escrita no arquivo de saída
 
-    if (argc < 3) {
-        printf("Parâmetros inválidos. Padrão: <nLinhas> <nColunas> \n");
+    if (argc < 2) {
+        printf("Parâmetros inválidos. Padrão: <nLinhas> \n");
         return 1;
     }
     linhas = atoi(argv[1]);
-    colunas = atoi(argv[2]) + 1;
+    colunas = linhas + 1;
     tam = linhas * colunas;
 
     // aloca memória para a matriz

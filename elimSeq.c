@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     double** matriz = ler_matriz_aumentada(nome_arquivo, &linhas, &colunas);
 
     if(colunas != linhas + 1) {
-        fprintf(stderr, "Erro: a matriz no arquivo não é uma matriz aumentada válida (%dx%d).\n", linhas, colunas);
+        fprintf(stderr, "Erro: a matriz no arquivo nao e uma matriz aumentada valida (%dx%d).\n", linhas, colunas);
         liberar_matriz(matriz, linhas);
         return EXIT_FAILURE;
     }

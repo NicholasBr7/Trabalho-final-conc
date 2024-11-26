@@ -82,7 +82,7 @@ double* eliminacao_gaussiana_concorrente(double** matriz, int n) {
 }
 
 
-int main(int argc, char argv[]){
+int main(int argc, char* argv[]){
     if(argc != 3) {
         fprintf(stderr, "Use: %s <arquivo_entrada.txt> <arquivo_saida.txt>\n", argv[0]);
         return EXIT_FAILURE;
