@@ -88,3 +88,25 @@ void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* so
     
     fclose(arquivo);
 }
+
+double* eliminacao_gaussiana(double** matriz, int n) {
+    for (int k = 0; k < n; k++) {
+        if (fabs(matriz[k][k]) < 1e-9) {
+            fprintf(stderr, "Erro: pivô zero encontrado na linha %d.\n", k);
+            exit(EXIT_FAILURE);
+        }
+
+        for (int i = k + 1; i < n; i++) {
+            double fator = matriz[i][k] / matriz[k][k];
+            for (int j = k; j <= n; j++) {
+                matriz[i][j] -= fator * matriz[k][j];
+            }
+        }
+    }
+
+    double* solucao = (double*)malloc(n * sizeof(double));
+
+    substituicao_regressiva(matriz, n, solucao);
+
+    return solucao;
+}

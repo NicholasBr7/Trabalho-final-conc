@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<math.h>
 
 double** ler_matriz_aumentada(const char* nome_arquivo, int* linhas, int* colunas);
 
