@@ -1,9 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "functions.c"
 #include "functions.h"
+#include "timer.h"
+#include <time.h> 
 
 int main(int argc, char* argv[]) {
+    clock_t t; 
+    t = clock();
+
     if(argc != 3) {
         fprintf(stderr, "Use: %s <arquivo_entrada.txt> <arquivo_saida.txt>\n", argv[0]);
         return EXIT_FAILURE;
@@ -25,6 +31,11 @@ int main(int argc, char* argv[]) {
     escreve_matriz_arquivo(linhas, colunas, matriz, solucao, argv[2]);
 
     liberar_matriz(matriz, linhas);
+
+    t = clock() - t; 
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
+
+    printf("Tempo total sequencial: %lf\n", time_taken);
 
     return 0;
 }
