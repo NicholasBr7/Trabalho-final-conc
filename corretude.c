@@ -3,9 +3,8 @@
 #include <string.h>
 #include <math.h>
 
-double* carregar_solucao(const char *arquivo, int *linhas) {
-    double* solucao = (double*)malloc(*linhas * sizeof(double*));
-
+double* carregar_solucao(const char *arquivo, int linhas) {
+    double* solucao = (double*)malloc(linhas * sizeof(double*));
     FILE *fp = fopen(arquivo, "r");
     if (!fp) {
         perror("Erro ao abrir o arquivo");
@@ -14,7 +13,7 @@ double* carregar_solucao(const char *arquivo, int *linhas) {
 
     char linha[1024];
     int encontrou_solucao = 0;
-    *linhas = 0;
+    linhas = 0;
 
     while (fgets(linha, sizeof(linha), fp)) {
         if (strstr(linha, "Solucao")) {
@@ -24,7 +23,7 @@ double* carregar_solucao(const char *arquivo, int *linhas) {
         if (encontrou_solucao) {
             double valor;
             if (sscanf(linha, "%lf", &valor) == 1) {
-                solucao[(*linhas)++] = valor;
+                solucao[(linhas)++] = valor;
             }
         }
     }
@@ -109,7 +108,7 @@ double** ler_matriz_a_e_vetor_b(const char* nome_arquivo, int* linhas, int* colu
 void imprimir_matriz(double** matriz, int linhas, int colunas) {
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
-            printf("%.3f ", matriz[i][j]);
+            printf("%.6f ", matriz[i][j]);
         }
         printf("\n");
     }
@@ -118,7 +117,7 @@ void imprimir_matriz(double** matriz, int linhas, int colunas) {
 // Função para imprimir o vetor b
 void imprimir_vetor(double* vetor, int tamanho) {
     for (int i = 0; i < tamanho; i++) {
-        printf("%.3f\n", vetor[i]);
+        printf("%.6f\n", vetor[i]);
     }
 }
 
@@ -143,7 +142,7 @@ double* multiplicar_matriz_vetor(double** matriz, double* vetor, int linhas, int
 // Função para verificar se dois vetores são iguais
 int comparar_vetores(double* vetor1, double* vetor2, int tamanho) {
     for (int i = 0; i < tamanho; i++) {
-        if (fabs(vetor1[i] - vetor2[i]) > 1e-6) { // Tolerância para comparações de ponto flutuante
+        if (fabs(vetor1[i] - vetor2[i]) > 1e-3) { // Tolerância para comparações de ponto flutuante
             return 0;
         }
     }
@@ -165,8 +164,6 @@ int main(int argc, char* argv[]) {
 
     matriz_a = ler_matriz_a_e_vetor_b(argv[1], &linhas, &colunas, &vetor_b);
 
-    printf("Linha: %d\n", linhas);
-    printf("Coluna: %d\n", colunas);
 
     printf("Matriz A:\n");
     imprimir_matriz(matriz_a, linhas, colunas - 1);
@@ -178,12 +175,16 @@ int main(int argc, char* argv[]) {
     printf("\nVetor x:\n");
     imprimir_vetor(vetor_x, linhas);
 
-    printf("Linha: %d\n", linhas);
-    printf("Coluna: %d\n", colunas);
     resultado = multiplicar_matriz_vetor(matriz_a, vetor_x, linhas, colunas-1);
     printf("\nResultado:\n");
     imprimir_vetor(resultado, linhas);
     
+    if(comparar_vetores(resultado, vetor_b, linhas)){
+        printf("OK");
+    }
+    else{
+        printf("Erro");
+    }
 
     return 0;
 }

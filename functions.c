@@ -73,7 +73,7 @@ void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* so
     fprintf(arquivo, "Matriz\n");
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
-            fprintf(arquivo, "%.3lf", matriz[i][j]);
+            fprintf(arquivo, "%.6lf", matriz[i][j]);
             if (j < colunas - 1) {
                 fprintf(arquivo, " ");
             }
@@ -83,7 +83,7 @@ void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* so
 
     fprintf(arquivo, "\nSolucao\n");
     for(int i = 0; i < linhas; i++){
-        fprintf(arquivo, "%.3lf\n", *(solucao+i));
+        fprintf(arquivo, "%.6lf\n", *(solucao+i));
     }
     
     fclose(arquivo);
