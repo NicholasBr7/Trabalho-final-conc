@@ -14,7 +14,7 @@
 //#define IMPRIME
 
 int main(int argc, char *argv[]) {
-    double *matriz;
+    float *matriz;
     int linhas, colunas;
     long long int tam;
     FILE *descritorTexto;
@@ -27,14 +27,14 @@ int main(int argc, char *argv[]) {
     colunas = linhas + 1;
     tam = linhas * colunas;
 
-    matriz = (double*) malloc(sizeof(double) * tam);
+    matriz = (float*) malloc(sizeof(float) * tam);
     if (!matriz) {
         printf("Erro de alocação de memória para a matriz");
         return 1;
     }
     srand(time(NULL));
     for (long int i = 0; i < tam; i++) {
-        *(matriz + i) = ((rand() % 201) - 100) + (rand() / (RAND_MAX / 200.0));
+        *(matriz + i) = (rand() % 201) - 100;
     }
 
     descritorTexto = fopen(argv[2], "w");
