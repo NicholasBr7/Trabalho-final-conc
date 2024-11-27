@@ -14,21 +14,19 @@
 //#define IMPRIME
 
 int main(int argc, char *argv[]) {
-    float *matriz; // matriz que será gerada
-    int linhas, colunas; // dimensões da matriz
-    long long int tam; // qtde de elementos na matriz
-    FILE *descritorBinario, *descritorTexto; // descritores dos arquivos de saída
-    size_t ret; // retorno da função de escrita no arquivo de saída
+    float *matriz;
+    int linhas, colunas;
+    long long int tam;
+    FILE *descritorTexto;
 
-    if (argc < 2) {
-        printf("Parâmetros inválidos. Padrão: <nLinhas> \n");
+    if (argc < 3) {
+        printf("Parametros invalidos. Padrao: <nome_do_programa> <numero_de_linhas> <nome_do_arquivo>\n");
         return 1;
     }
     linhas = atoi(argv[1]);
     colunas = linhas + 1;
     tam = linhas * colunas;
 
-    // aloca memória para a matriz
     matriz = (float*) malloc(sizeof(float) * tam);
     if (!matriz) {
         printf("Erro de alocação de memória para a matriz");
@@ -36,11 +34,10 @@ int main(int argc, char *argv[]) {
     }
     srand(time(NULL));
     for (long int i = 0; i < tam; i++) {
-        *(matriz + i) = (rand() % 201) - 100; // Gera números inteiros entre -100 e 100
+        *(matriz + i) = (rand() % 201) - 100;
     }
 
-    // imprimir na saída padrão e no arquivo de texto a matriz gerada
-    descritorTexto = fopen("matriz.txt", "w");
+    descritorTexto = fopen(argv[2], "w");
     if (!descritorTexto) {
         printf("Erro de abertura do arquivo de texto");
         return 2;
@@ -69,28 +66,6 @@ int main(int argc, char *argv[]) {
 
     fclose(descritorTexto);
 
-    // escreve a matriz no arquivo binário
-    /*
-    descritorBinario = fopen("matriz.bin", "wb");
-    if (!descritorBinario) {
-        printf("Erro de abertura do arquivo binário");
-        return 3;
-    }
-    // escreve número de linhas e de colunas
-    fwrite(&linhas, sizeof(int), 1, descritorBinario);
-    fwrite(&colunas, sizeof(int), 1, descritorBinario);
-    // escreve os elementos da matriz
-    ret = fwrite(matriz, sizeof(float), tam, descritorBinario);
-    if (ret < tam) {
-        fprintf(stderr, "Erro de escrita no arquivo binário\n");
-        return 4;
-    }
-
-    // finaliza o uso das variáveis
-    fclose(descritorBinario);  
-     */
-    
     free(matriz);
     return 0;
 }
-
