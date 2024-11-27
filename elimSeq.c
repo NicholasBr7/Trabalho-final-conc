@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <math.h>
 #include "functions.h"
-#include "timer.h"
+#include "functions.c"
+#include <time.h>
 
 int main(int argc, char* argv[]) {
-    double inicio, fim, delta;
-    GET_TIME(inicio);
+    clock_t inicio, fim;
+    inicio = clock();
+
     if (argc != 3) {
         fprintf(stderr, "Use: %s <arquivo_entrada.txt> <arquivo_saida.txt>\n", argv[0]);
         return EXIT_FAILURE;
@@ -23,15 +25,17 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+
     double* solucao = eliminacao_gaussiana(matriz, linhas);
 
     escreve_matriz_arquivo(linhas, colunas, matriz, solucao, argv[2]);
 
     liberar_matriz(matriz, linhas);
 
-    GET_TIME(fim);   
-    delta = fim - inicio;
-    printf("Tempo total sequencial: %lf\n", delta);
+    fim = clock();
+
+    double tempo_total = (double)(fim - inicio) / CLOCKS_PER_SEC;
+    printf("Tempo total: %.6lf segundos\n", tempo_total);
 
     return 0;
 }

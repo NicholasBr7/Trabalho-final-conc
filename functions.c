@@ -15,7 +15,7 @@ double** ler_matriz_aumentada(const char* nome_arquivo, int* linhas, int* coluna
 
     while (!feof(arquivo)) {
         int count_colunas = 0;
-        char linha[10000];
+        char linha[50000];
         if (fgets(linha, sizeof(linha), arquivo)) {
             char* ptr = linha;
             while (sscanf(ptr, "%lf%n", &temp, &count_colunas) == 1) {

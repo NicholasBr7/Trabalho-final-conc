@@ -1,33 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include<pthread.h>
-#include "timer.h"
+#include <pthread.h>
+#include <time.h>
 
-pthread_mutex_t mutex;
-pthread_cond_t cond;
-
+pthread_barrier_t barreira;
 int nThreads;
 
-typedef struct{
-   int id; //identificador do elemento que a thread ira processar
-   int dim; //dimensao das estruturas de entrada
-   double** matriz;
+typedef struct {
+    int id;           // Identificador da thread
+    int dim;          // Dimensão da matriz
+    double** matriz;  // Matriz aumentada
 } tArgs;
-
-void barreira(int nthreads) {
-    static int bloqueadas = 0;
-    pthread_mutex_lock(&mutex); //inicio secao critica
-    if (bloqueadas == (nthreads-1)) { 
-      //ultima thread a chegar na barreira
-      pthread_cond_broadcast(&cond);
-      bloqueadas=0;
-    } else {
-      bloqueadas++;
-      pthread_cond_wait(&cond, &mutex);
-    }
-    pthread_mutex_unlock(&mutex); //fim secao critica
-}
 
 double** ler_matriz_aumentada(const char* nome_arquivo, int* linhas, int* colunas) {
     FILE* arquivo = fopen(nome_arquivo, "r");
@@ -95,25 +79,25 @@ void *eliminacao_gaussiana(void *arg) {
     double** matriz = args->matriz;
 
     for (int k = 0; k < n; k++) {
-        // Verifica pivô apenas uma vez
+        // Apenas a thread mestre verifica o pivô
         if (args->id == 0 && fabs(matriz[k][k]) < 1e-9) {
             fprintf(stderr, "Erro: pivô zero encontrado na linha %d.\n", k);
             exit(EXIT_FAILURE);
         }
 
-        // Sincroniza antes de eliminar
-        barreira(nThreads);
+        // Sincroniza as threads antes da etapa
+        pthread_barrier_wait(&barreira);
 
-        // Cada thread processa um subconjunto de linhas
-        for (int i = k + 1 + args->id; i < n; i += nThreads) {
+        // Eliminação paralela
+        for (int i = k + 1 + args->id; i < n; i += 3 * nThreads) {
             double fator = matriz[i][k] / matriz[k][k];
             for (int j = k; j <= n; j++) {
                 matriz[i][j] -= fator * matriz[k][j];
             }
         }
 
-        // Sincroniza após eliminar
-        barreira(nThreads);
+        // Sincroniza após a eliminação
+        pthread_barrier_wait(&barreira);
     }
 
     pthread_exit(NULL);
@@ -121,50 +105,41 @@ void *eliminacao_gaussiana(void *arg) {
 
 void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* solucao, const char *nomeArquivo) {
     FILE *arquivo = fopen(nomeArquivo, "w");
-    
     if (arquivo == NULL) {
         printf("Erro ao abrir o arquivo!\n");
         return;
     }
     
-    fprintf(arquivo, "Matriz\n");
+    fprintf(arquivo, "Matriz Final:\n");
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
-            fprintf(arquivo, "%.3lf", matriz[i][j]);
-            if (j < colunas - 1) {
-                fprintf(arquivo, " ");
-            }
+            fprintf(arquivo, "%.3lf ", matriz[i][j]);
         }
         fprintf(arquivo, "\n");
     }
 
-    fprintf(arquivo, "\nSolucao\n");
-    for(int i = 0; i < linhas; i++){
-        fprintf(arquivo, "%.3lf\n", *(solucao+i));
+    fprintf(arquivo, "\nSolução:\n");
+    for (int i = 0; i < linhas; i++) {
+        fprintf(arquivo, "%.3lf\n", solucao[i]);
     }
     
     fclose(arquivo);
 }
 
 int main(int argc, char* argv[]) {
-    double inicio, fim, delta;
-
-    GET_TIME(inicio);
+    clock_t inicio, fim;
+    inicio = clock();
 
     if (argc != 4) {
-        fprintf(stderr, "Use: %s <arquivo_entrada.txt> <arquivo_saida.txt> <nThreads> \n", argv[0]);
+        fprintf(stderr, "Use: %s <arquivo_entrada.txt> <arquivo_saida.txt> <nThreads>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
     const char* nome_arquivo = argv[1];
+    const char* nome_saida = argv[2];
     nThreads = atoi(argv[3]);
+
     int linhas, colunas;
-
-    pthread_t *tid; 
-    tArgs *args; 
-    pthread_mutex_init(&mutex, NULL);
-    pthread_cond_init(&cond, NULL);
-
     double** matriz = ler_matriz_aumentada(nome_arquivo, &linhas, &colunas);
 
     if (colunas != linhas + 1) {
@@ -173,48 +148,44 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    tid = (pthread_t*) malloc(sizeof(pthread_t)*nThreads);
-    if(tid==NULL) {
-        puts("ERRO--malloc"); 
-        return 2;
-    }
-    args = (tArgs*) malloc(sizeof(tArgs)*nThreads);
-    if(args==NULL) {
-        puts("ERRO--malloc"); 
-        return 2;
+    pthread_t *tid = (pthread_t*)malloc(nThreads * sizeof(pthread_t));
+    tArgs *args = (tArgs*)malloc(nThreads * sizeof(tArgs));
+
+    if (pthread_barrier_init(&barreira, NULL, nThreads)) {
+        fprintf(stderr, "Erro ao inicializar barreira.\n");
+        return EXIT_FAILURE;
     }
 
     for (int i = 0; i < nThreads; i++) {
-        (args + i)->id = i;
-        (args + i)->dim = linhas;
-        (args + i)->matriz = matriz;
-        if (pthread_create(tid + i, NULL, eliminacao_gaussiana, (void*)(args + i))) {
-            puts("ERRO--pthread_create");
-            return 3;
+        args[i].id = i;
+        args[i].dim = linhas;
+        args[i].matriz = matriz;
+        if (pthread_create(&tid[i], NULL, eliminacao_gaussiana, (void*)&args[i])) {
+            fprintf(stderr, "Erro ao criar thread.\n");
+            return EXIT_FAILURE;
         }
     }
 
-    // Espera pelas threads
     for (int i = 0; i < nThreads; i++) {
-        pthread_join(*(tid + i), NULL);
+        pthread_join(tid[i], NULL);
     }
 
-    // Substituição regressiva
     double* solucao = (double*)malloc(linhas * sizeof(double));
     substituicao_regressiva(matriz, linhas, solucao);
 
-    // Escreve resultados
-    escreve_matriz_arquivo(linhas, colunas, matriz, solucao, argv[2]);
 
-    // Libera memória
+
+    escreve_matriz_arquivo(linhas, colunas, matriz, solucao, nome_saida);
+
     liberar_matriz(matriz, linhas);
     free(solucao);
     free(tid);
     free(args);
+    pthread_barrier_destroy(&barreira);
 
-    GET_TIME(fim);   
-    delta = fim - inicio;
-    printf("Tempo total concorrente com %d threads: %lf\n", nThreads, delta);
+    fim = clock();
+    double tempo_total = (double)(fim - inicio) / CLOCKS_PER_SEC;
+    printf("Tempo total: %.6lf segundos\n", tempo_total);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
