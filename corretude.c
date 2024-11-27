@@ -3,6 +3,8 @@
 #include <string.h>
 #include <math.h>
 
+//#define IMPRIME; 
+
 double* carregar_solucao(const char *arquivo, int linhas) {
     double* solucao = (double*)malloc(linhas * sizeof(double*));
     FILE *fp = fopen(arquivo, "r");
@@ -163,27 +165,25 @@ int main(int argc, char* argv[]) {
     }
 
     matriz_a = ler_matriz_a_e_vetor_b(argv[1], &linhas, &colunas, &vetor_b);
-
-
+    vetor_x = carregar_solucao(argv[2], &linhas);
+    resultado = multiplicar_matriz_vetor(matriz_a, vetor_x, linhas, colunas-1);
+    
+    #ifdef IMPRIME
     printf("Matriz A:\n");
     imprimir_matriz(matriz_a, linhas, colunas - 1);
 
     printf("\nVetor b:\n");
     imprimir_vetor(vetor_b, linhas);
-
-    vetor_x = carregar_solucao(argv[2], &linhas);
+        
     printf("\nVetor x:\n");
     imprimir_vetor(vetor_x, linhas);
-
-    resultado = multiplicar_matriz_vetor(matriz_a, vetor_x, linhas, colunas-1);
+    
     printf("\nResultado:\n");
     imprimir_vetor(resultado, linhas);
-    
-    if(comparar_vetores(resultado, vetor_b, linhas)){
-        printf("OK");
-    }
-    else{
-        printf("Erro");
+    #endif
+
+    if(!comparar_vetores(resultado, vetor_b, linhas)){
+        printf("Erro.");
     }
 
     return 0;
