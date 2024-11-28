@@ -34,7 +34,7 @@ Console: tempos de inicialização, processamento e finalização
 Passo adicional para verificação das contas caso desejado:
 
 Compila-se o arquivo corretude.c para verificar se o conjunto de solução encontrado está, de fato, correto.
-Realiza o processo de checagem com margem de 0,1.
+Realiza o processo de checagem com margem de 0,5.
 Com isso, caso o conjunto solução esteja correto, não aparecem avisos, caso contrário, aparece mensagem de erro no console.
 
 Entrada: ./corretude matriz.txt saidaConc.txt nThreads
