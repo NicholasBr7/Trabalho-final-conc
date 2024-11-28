@@ -14,7 +14,7 @@
 //#define IMPRIME
 
 int main(int argc, char *argv[]) {
-    float *matriz; // matriz que será gerada
+    double *matriz; // matriz que será gerada
     int linhas, colunas; // dimensões da matriz
     long long int tam; // qtde de elementos na matriz
     FILE *descritorBinario, *descritorTexto; // descritores dos arquivos de saída
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     tam = linhas * colunas;
 
     // aloca memória para a matriz
-    matriz = (float*) malloc(sizeof(float) * tam);
+    matriz = (double*) malloc(sizeof(double) * tam);
     if (!matriz) {
         printf("Erro de alocação de memória para a matriz");
         return 1;

@@ -128,7 +128,15 @@ void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* so
     fprintf(arquivo, "Matriz\n");
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
-            fprintf(arquivo, "%.3lf ", matriz[i][j]);
+            if(fabs(matriz[i][j]) < 1e-3){
+                fprintf(arquivo, "%.3lf", 0.000);
+            }
+            else{
+                fprintf(arquivo, "%.3lf", matriz[i][j]);
+            }
+            if (j < colunas - 1) {
+                fprintf(arquivo, " ");
+            }
         }
         fprintf(arquivo, "\n");
     }
@@ -213,6 +221,6 @@ int main(int argc, char* argv[]) {
     double tempo_totalLib = (double)(fimLib - inicioLib) / CLOCKS_PER_SEC;
     printf("Tempo total finalizacao: %.6lf segundos\n", tempo_totalLib);
 
-    return 1;
+    return 0;
 }
 
