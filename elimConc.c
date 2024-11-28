@@ -89,7 +89,7 @@ void *eliminacao_gaussiana(void *arg) {
         pthread_barrier_wait(&barreira);
 
         // Eliminação paralela
-        for (int i = k + 1 + args->id; i < n; i += 3 * nThreads) {
+        for (int i = k + 1 + args->id; i < n; i +=  nThreads) {
             double fator = matriz[i][k] / matriz[k][k];
             for (int j = k; j <= n; j++) {
                 matriz[i][j] -= fator * matriz[k][j];
@@ -110,7 +110,7 @@ void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* so
         return;
     }
     
-    fprintf(arquivo, "Matriz Final:\n");
+    fprintf(arquivo, "Matriz\n");
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             fprintf(arquivo, "%.3lf ", matriz[i][j]);
@@ -118,7 +118,7 @@ void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* so
         fprintf(arquivo, "\n");
     }
 
-    fprintf(arquivo, "\nSolução:\n");
+    fprintf(arquivo, "\nSolucao\n");
     for (int i = 0; i < linhas; i++) {
         fprintf(arquivo, "%.3lf\n", solucao[i]);
     }
