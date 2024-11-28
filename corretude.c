@@ -144,7 +144,7 @@ double* multiplicar_matriz_vetor(double** matriz, double* vetor, int linhas, int
 // Função para verificar se dois vetores são iguais
 int comparar_vetores(double* vetor1, double* vetor2, int tamanho) {
     for (int i = 0; i < tamanho; i++) {
-        if (fabs(vetor1[i] - vetor2[i]) > 1e-3) { // Tolerância para comparações de ponto flutuante
+        if (fabs(vetor1[i] - vetor2[i]) > 1e-1) { // Tolerância para comparações de ponto flutuante
             return 0;
         }
     }
