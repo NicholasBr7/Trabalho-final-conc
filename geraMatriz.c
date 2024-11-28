@@ -21,8 +21,7 @@ int main(int argc, char *argv[]) {
     float *matriz; 
     int linhas, colunas; 
     long long int tam; 
-    FILE *descritorBinario, *descritorTexto; 
-    size_t ret; 
+    FILE *descritorTexto;  
 
     if (argc < 2) {
         printf("Parâmetros inválidos. Padrão: <nomeArquivo> <nLinhas> \n");
