@@ -4,14 +4,29 @@
 #include <pthread.h>
 #include <time.h>
 
-pthread_barrier_t barreira;
 int nThreads;
+pthread_mutex_t mutex;
+pthread_cond_t cond;
+int bloqueadas = 0;
 
 typedef struct {
     int id;           // Identificador da thread
     int dim;          // Dimensão da matriz
     double** matriz;  // Matriz aumentada
 } tArgs;
+
+void barreira(int nthreads) {
+    pthread_mutex_lock(&mutex); // Início da seção crítica
+    if (bloqueadas == (nthreads - 1)) { 
+        // Última thread a chegar na barreira
+        pthread_cond_broadcast(&cond);
+        bloqueadas = 0;
+    } else {
+        bloqueadas++;
+        pthread_cond_wait(&cond, &mutex);
+    }
+    pthread_mutex_unlock(&mutex); // Fim da seção crítica
+}
 
 double** ler_matriz_aumentada(const char* nome_arquivo, int* linhas, int* colunas) {
     FILE* arquivo = fopen(nome_arquivo, "r");
@@ -86,10 +101,10 @@ void *eliminacao_gaussiana(void *arg) {
         }
 
         // Sincroniza as threads antes da etapa
-        pthread_barrier_wait(&barreira);
+        barreira(nThreads);
 
         // Eliminação paralela
-        for (int i = k + 1 + args->id; i < n; i +=  nThreads) {
+        for (int i = k + 1 + args->id; i < n; i += nThreads) {
             double fator = matriz[i][k] / matriz[k][k];
             for (int j = k; j <= n; j++) {
                 matriz[i][j] -= fator * matriz[k][j];
@@ -97,7 +112,7 @@ void *eliminacao_gaussiana(void *arg) {
         }
 
         // Sincroniza após a eliminação
-        pthread_barrier_wait(&barreira);
+        barreira(nThreads);
     }
 
     pthread_exit(NULL);
@@ -132,12 +147,15 @@ int main(int argc, char* argv[]) {
 
     if (argc != 4) {
         fprintf(stderr, "Use: %s <arquivo_entrada.txt> <arquivo_saida.txt> <nThreads>\n", argv[0]);
-        return EXIT_FAILURE;
+        return 1;
     }
 
     const char* nome_arquivo = argv[1];
     const char* nome_saida = argv[2];
     nThreads = atoi(argv[3]);
+
+    pthread_mutex_init(&mutex, NULL);
+    pthread_cond_init (&cond, NULL);
 
     int linhas, colunas;
     double** matriz = ler_matriz_aumentada(nome_arquivo, &linhas, &colunas);
@@ -150,11 +168,6 @@ int main(int argc, char* argv[]) {
 
     pthread_t *tid = (pthread_t*)malloc(nThreads * sizeof(pthread_t));
     tArgs *args = (tArgs*)malloc(nThreads * sizeof(tArgs));
-
-    if (pthread_barrier_init(&barreira, NULL, nThreads)) {
-        fprintf(stderr, "Erro ao inicializar barreira.\n");
-        return EXIT_FAILURE;
-    }
 
     for (int i = 0; i < nThreads; i++) {
         args[i].id = i;
@@ -173,19 +186,19 @@ int main(int argc, char* argv[]) {
     double* solucao = (double*)malloc(linhas * sizeof(double));
     substituicao_regressiva(matriz, linhas, solucao);
 
-
-
     escreve_matriz_arquivo(linhas, colunas, matriz, solucao, nome_saida);
 
     liberar_matriz(matriz, linhas);
     free(solucao);
     free(tid);
     free(args);
-    pthread_barrier_destroy(&barreira);
+
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&cond);
 
     fim = clock();
     double tempo_total = (double)(fim - inicio) / CLOCKS_PER_SEC;
     printf("Tempo total: %.6lf segundos\n", tempo_total);
 
-    return EXIT_SUCCESS;
+    return 1;
 }
