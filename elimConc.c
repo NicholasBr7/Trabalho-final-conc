@@ -142,8 +142,8 @@ void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* so
 }
 
 int main(int argc, char* argv[]) {
-    clock_t inicio, fim;
-    inicio = clock();
+    clock_t inicioInit, fimInit, inicioProc, fimProc, inicioLib, fimLib;
+    inicioInit = clock();
 
     if (argc != 4) {
         fprintf(stderr, "Use: %s <arquivo_entrada.txt> <arquivo_saida.txt> <nThreads>\n", argv[0]);
@@ -163,11 +163,17 @@ int main(int argc, char* argv[]) {
     if (colunas != linhas + 1) {
         fprintf(stderr, "Erro: a matriz no arquivo não é uma matriz aumentada válida (%dx%d).\n", linhas, colunas);
         liberar_matriz(matriz, linhas);
-        return EXIT_FAILURE;
+        return 1;
     }
 
     pthread_t *tid = (pthread_t*)malloc(nThreads * sizeof(pthread_t));
     tArgs *args = (tArgs*)malloc(nThreads * sizeof(tArgs));
+
+    fimInit = clock();
+    double tempo_totalInit = (double)(fimInit - inicioInit) / CLOCKS_PER_SEC;
+    printf("Tempo total inicializacao: %.6lf segundos\n", tempo_totalInit);
+
+    inicioProc = clock();
 
     for (int i = 0; i < nThreads; i++) {
         args[i].id = i;
@@ -175,7 +181,7 @@ int main(int argc, char* argv[]) {
         args[i].matriz = matriz;
         if (pthread_create(&tid[i], NULL, eliminacao_gaussiana, (void*)&args[i])) {
             fprintf(stderr, "Erro ao criar thread.\n");
-            return EXIT_FAILURE;
+            return 1;
         }
     }
 
@@ -185,6 +191,13 @@ int main(int argc, char* argv[]) {
 
     double* solucao = (double*)malloc(linhas * sizeof(double));
     substituicao_regressiva(matriz, linhas, solucao);
+
+    fimProc = clock();
+    double tempo_totalProc = (double)(fimProc - inicioProc) / CLOCKS_PER_SEC;
+    printf("Tempo total processamento: %.6lf segundos\n", tempo_totalProc);
+
+
+    inicioLib = clock();
 
     escreve_matriz_arquivo(linhas, colunas, matriz, solucao, nome_saida);
 
@@ -196,9 +209,10 @@ int main(int argc, char* argv[]) {
     pthread_mutex_destroy(&mutex);
     pthread_cond_destroy(&cond);
 
-    fim = clock();
-    double tempo_total = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    printf("Tempo total: %.6lf segundos\n", tempo_total);
+    fimLib = clock();
+    double tempo_totalLib = (double)(fimLib - inicioLib) / CLOCKS_PER_SEC;
+    printf("Tempo total finalizacao: %.6lf segundos\n", tempo_totalLib);
 
     return 1;
 }
+

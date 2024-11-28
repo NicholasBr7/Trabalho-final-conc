@@ -6,8 +6,8 @@
 #include <time.h>
 
 int main(int argc, char* argv[]) {
-    clock_t inicio, fim;
-    inicio = clock();
+    clock_t inicioInit, fimInit, inicioProc, fimProc, inicioLib, fimLib;
+    inicioInit = clock();
 
     if (argc != 3) {
         fprintf(stderr, "Use: %s <arquivo_entrada.txt> <arquivo_saida.txt>\n", argv[0]);
@@ -25,17 +25,27 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    fimInit = clock();
+    double tempo_totalInit = (double)(fimInit - inicioInit) / CLOCKS_PER_SEC;
+    printf("Tempo total inicializacao: %.6lf segundos\n", tempo_totalInit);
+
+    inicioProc = clock();
 
     double* solucao = eliminacao_gaussiana(matriz, linhas);
+
+    fimProc = clock();
+    double tempo_totalProc = (double)(fimProc - inicioProc) / CLOCKS_PER_SEC;
+    printf("Tempo total processamento: %.6lf segundos\n", tempo_totalProc);
+
+    inicioLib = clock();
 
     escreve_matriz_arquivo(linhas, colunas, matriz, solucao, argv[2]);
 
     liberar_matriz(matriz, linhas);
 
-    fim = clock();
-
-    double tempo_total = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    printf("Tempo total: %.6lf segundos\n", tempo_total);
+    fimLib = clock();
+    double tempo_totalLib = (double)(fimLib - inicioLib) / CLOCKS_PER_SEC;
+    printf("Tempo total finalizacao: %.6lf segundos\n", tempo_totalLib);
 
     return 0;
 }
