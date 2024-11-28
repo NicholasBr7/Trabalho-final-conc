@@ -2,10 +2,11 @@
 #include<stdlib.h>
 #include<math.h>
 
+//Função para ler a matriz estendida
 double** ler_matriz_aumentada(const char* nome_arquivo, int* linhas, int* colunas) {
     FILE* arquivo = fopen(nome_arquivo, "r");
     if (arquivo == NULL) {
-        perror("Erro ao abrir o arquivo");
+        printf("Erro ao abrir o arquivo");
         exit(EXIT_FAILURE);
     }
 
@@ -45,6 +46,7 @@ double** ler_matriz_aumentada(const char* nome_arquivo, int* linhas, int* coluna
     return matriz;
 }
 
+//Libera o espaço de memória da matriz
 void liberar_matriz(double** matriz, int linhas) {
     for (int i = 0; i < linhas; i++) {
         free(matriz[i]);
@@ -52,6 +54,7 @@ void liberar_matriz(double** matriz, int linhas) {
     free(matriz);
 }
 
+//Realiza o processo de achar solução via matriz reduzida
 void substituicao_regressiva(double** matriz, int n, double* solucao) {
     for (int i = n - 1; i >= 0; i--) {
         solucao[i] = matriz[i][n];
@@ -62,6 +65,7 @@ void substituicao_regressiva(double** matriz, int n, double* solucao) {
     }
 }
 
+//Escreve a solução em um arquivo txt
 void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* solucao, const char *nomeArquivo) {
     FILE *arquivo = fopen(nomeArquivo, "w");
     
@@ -94,6 +98,7 @@ void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* so
     fclose(arquivo);
 }
 
+//Eliminação gaussiana sequencial
 double* eliminacao_gaussiana(double** matriz, int n) {
     for (int k = 0; k < n; k++) {
         if (fabs(matriz[k][k]) < 1e-9) {

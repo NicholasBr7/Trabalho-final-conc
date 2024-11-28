@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     descritorTexto = fopen("matriz.txt", "w");
     if (!descritorTexto) {
         printf("Erro de abertura do arquivo de texto");
-        return 2;
+        return 1;
     }
 
     for (int i = 0; i < linhas; i++) {

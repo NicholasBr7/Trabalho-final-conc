@@ -5,24 +5,50 @@
 
 //#define IMPRIME
 
+//Lê o arquivo de saida e coloca a solução em um vetor
 double* carregar_solucao(const char *arquivo, int* num_linhas) {
-    int capacidade = 10; // Capacidade inicial do vetor
-    double* solucao = (double*)malloc(capacidade * sizeof(double));
-    if (!solucao) {
-        perror("Erro ao alocar memória para solução");
-        exit(EXIT_FAILURE);
-    }
-
     FILE *fp = fopen(arquivo, "r");
     if (!fp) {
         perror("Erro ao abrir o arquivo");
-        free(solucao);
         exit(EXIT_FAILURE);
     }
 
     char linha[50000];
     int encontrou_solucao = 0;
     *num_linhas = 0;
+
+    // Primeira passagem: contar o número de linhas na seção "Solucao"
+    while (fgets(linha, sizeof(linha), fp)) {
+        if (strstr(linha, "Solucao")) {
+            encontrou_solucao = 1;
+            continue;
+        }
+        if (encontrou_solucao) {
+            double valor;
+            if (sscanf(linha, "%lf", &valor) == 1) {
+                (*num_linhas)++;
+            }
+        }
+    }
+
+    if (!encontrou_solucao) {
+        fprintf(stderr, "Seção 'Solucao' não encontrada no arquivo.\n");
+        fclose(fp);
+        exit(EXIT_FAILURE);
+    }
+
+    // Alocar memória com base no número de linhas encontrado
+    double* solucao = (double*)malloc(*num_linhas * sizeof(double));
+    if (!solucao) {
+        perror("Erro ao alocar memória para a solução");
+        fclose(fp);
+        exit(EXIT_FAILURE);
+    }
+
+    // Segunda passagem: ler os valores da seção "Solucao"
+    rewind(fp); // Retorna ao início do arquivo
+    encontrou_solucao = 0;
+    int indice = 0;
 
     while (fgets(linha, sizeof(linha), fp)) {
         if (strstr(linha, "Solucao")) {
@@ -32,31 +58,16 @@ double* carregar_solucao(const char *arquivo, int* num_linhas) {
         if (encontrou_solucao) {
             double valor;
             if (sscanf(linha, "%lf", &valor) == 1) {
-                if (*num_linhas >= capacidade) {
-                    capacidade *= 2;
-                    solucao = (double*)realloc(solucao, capacidade * sizeof(double));
-                    if (!solucao) {
-                        perror("Erro ao realocar memória para solução");
-                        fclose(fp);
-                        exit(EXIT_FAILURE);
-                    }
-                }
-                solucao[(*num_linhas)++] = valor;
+                solucao[indice++] = valor;
             }
         }
     }
 
     fclose(fp);
-
-    if (!encontrou_solucao) {
-        fprintf(stderr, "Seção 'Solucao' não encontrada no arquivo.\n");
-        free(solucao);
-        exit(EXIT_FAILURE);
-    }
-
     return solucao;
 }
 
+//Guarda a matriz A em um vetor de vetor de vetores e B em um vetor
 double** ler_matriz_a_e_vetor_b(const char* nome_arquivo, int* linhas, int* colunas, double** vetor_b) {
     FILE* arquivo = fopen(nome_arquivo, "r");
     if (!arquivo) {
@@ -90,7 +101,6 @@ double** ler_matriz_a_e_vetor_b(const char* nome_arquivo, int* linhas, int* colu
 
     rewind(arquivo);
 
-    // Alocar memória para matriz A e vetor b
     double** matriz_a = (double**)malloc(*linhas * sizeof(double*));
     *vetor_b = (double*)malloc(*linhas * sizeof(double));
 
@@ -109,7 +119,6 @@ double** ler_matriz_a_e_vetor_b(const char* nome_arquivo, int* linhas, int* colu
         }
     }
 
-    // Ler dados e preencher matriz A e vetor b
     for (int i = 0; i < *linhas; i++) {
         for (int j = 0; j < *colunas; j++) {
             double valor;
@@ -147,6 +156,7 @@ void imprimir_vetor(double* vetor, int tamanho) {
     }
 }
 
+//Multiplica um vetor A por um vetor X e anota o resultado
 double* multiplicar_matriz_vetor(double** matriz, double* vetor, int linhas, int colunas) {
     double* resultado = (double*)malloc(linhas * sizeof(double));
     if (!resultado) {
@@ -164,9 +174,10 @@ double* multiplicar_matriz_vetor(double** matriz, double* vetor, int linhas, int
     return resultado;
 }
 
+//Realiza a comparação da margem de erro
 int comparar_vetores(double* vetor1, double* vetor2, int tamanho) {
     for (int i = 0; i < tamanho; i++) {
-        if (fabs(vetor1[i] - vetor2[i]) > 0.5) { // Tolerância para comparações de ponto flutuante
+        if (fabs(vetor1[i] - vetor2[i]) > 0.5) { 
             return 0;
         }
     }
@@ -204,12 +215,11 @@ int main(int argc, char* argv[]) {
 #endif
 
     if (!comparar_vetores(resultado, vetor_b, linhas)) {
-        printf("Erro: os vetores não coincidem.\n");
+        printf("Erro: solução incorreta.\n");
     } else {
-        printf("Sucesso: os vetores coincidem.\n");
+        printf("Sucesso: solução correta.\n");
     }
 
-    // Liberar memória
     free(vetor_b);
     free(vetor_x);
     free(resultado);

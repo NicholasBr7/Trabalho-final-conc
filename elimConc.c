@@ -31,18 +31,18 @@ typedef struct {
 
 //Função de barreira fornecida pela professora
 void barreira(int nthreads) {
-    pthread_mutex_lock(&mutex); // Início da seção crítica
+    pthread_mutex_lock(&mutex); 
     if (bloqueadas == (nthreads - 1)) { 
-        // Última thread a chegar na barreira
         pthread_cond_broadcast(&cond);
         bloqueadas = 0;
     } else {
         bloqueadas++;
         pthread_cond_wait(&cond, &mutex);
     }
-    pthread_mutex_unlock(&mutex); // Fim da seção crítica
+    pthread_mutex_unlock(&mutex); 
 }
 
+//Função de eliminação gaussiana implementada de forma concorrente
 void *eliminacao_gaussiana_conc(void *arg) {
     tArgs *args = (tArgs*) arg;
     int n = args->dim;
