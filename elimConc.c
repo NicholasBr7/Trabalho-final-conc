@@ -171,7 +171,7 @@ int main(int argc, char* argv[]) {
 
     fimInit = clock();
     double tempo_totalInit = (double)(fimInit - inicioInit) / CLOCKS_PER_SEC;
-    printf("Tempo total inicializacao: %.6lf segundos\n", tempo_totalInit);
+    printf("Tempo total inicializacao: %.3lf segundos\n", tempo_totalInit);
 
     inicioProc = clock();
 
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
 
     fimProc = clock();
     double tempo_totalProc = (double)(fimProc - inicioProc) / CLOCKS_PER_SEC;
-    printf("Tempo total processamento: %.6lf segundos\n", tempo_totalProc);
+    printf("Tempo total processamento: %.3lf segundos\n", tempo_totalProc);
 
 
     inicioLib = clock();
@@ -211,8 +211,9 @@ int main(int argc, char* argv[]) {
 
     fimLib = clock();
     double tempo_totalLib = (double)(fimLib - inicioLib) / CLOCKS_PER_SEC;
-    printf("Tempo total finalizacao: %.6lf segundos\n", tempo_totalLib);
+    printf("Tempo total finalizacao: %.3lf segundos\n", tempo_totalLib);
 
     return 1;
 }
+
 
