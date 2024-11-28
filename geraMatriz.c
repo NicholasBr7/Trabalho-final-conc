@@ -1,24 +1,28 @@
 /*
+    Código baseado no gera_vet_rand.c do laboratório 2;
     Esse arquivo serve gerar uma matriz com valores aleatórios inteiros 
-    entre -100 e 100. O número de colunas será sempre col + 1. 
-    Seu resultado será salvo em um arquivo binário e o outro txt
+    entre -100 e 100. Passa-se o número de linhas/número de variáveis 
+    os quais são iguais, já que a matriz será quadrada. O número de 
+    colunas será sempre linhas + 1. 
+    Seu resultado será salvo em um arquivo txt chamado "matriz.txt"
 
     Entrada: ./nomeArquivo nLinhas 
-    Saída: arquivos binário e txt
+    Saída: arquivos txt "matriz.txt"
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-//#define IMPRIME
+//Macro que serve para imprimir ou não a matriz gerada no console
+//#define IMPRIME 
 
 int main(int argc, char *argv[]) {
-    float *matriz; // matriz que será gerada
-    int linhas, colunas; // dimensões da matriz
-    long long int tam; // qtde de elementos na matriz
-    FILE *descritorBinario, *descritorTexto; // descritores dos arquivos de saída
-    size_t ret; // retorno da função de escrita no arquivo de saída
+    float *matriz; 
+    int linhas, colunas; 
+    long long int tam; 
+    FILE *descritorBinario, *descritorTexto; 
+    size_t ret; 
 
     if (argc < 2) {
         printf("Parâmetros inválidos. Padrão: <nomeArquivo> <nLinhas> \n");
@@ -34,12 +38,14 @@ int main(int argc, char *argv[]) {
         printf("Erro de alocação de memória para a matriz");
         return 1;
     }
+
+    // Gera números inteiros entre -100 e 100
     srand(time(NULL));
     for (long int i = 0; i < tam; i++) {
-        *(matriz + i) = (rand() % 201) - 100; // Gera números inteiros entre -100 e 100
+        *(matriz + i) = (rand() % 201) - 100; 
     }
 
-    // imprimir na saída padrão e no arquivo de texto a matriz gerada
+    // Imprimir na saída padrão e no arquivo de texto a matriz gerada
     descritorTexto = fopen("matriz.txt", "w");
     if (!descritorTexto) {
         printf("Erro de abertura do arquivo de texto");
@@ -68,25 +74,6 @@ int main(int argc, char *argv[]) {
     }
 
     fclose(descritorTexto);
-
-    // escreve a matriz no arquivo binário
-    descritorBinario = fopen("matriz.bin", "wb");
-    if (!descritorBinario) {
-        printf("Erro de abertura do arquivo binário");
-        return 3;
-    }
-    // escreve número de linhas e de colunas
-    fwrite(&linhas, sizeof(int), 1, descritorBinario);
-    fwrite(&colunas, sizeof(int), 1, descritorBinario);
-    // escreve os elementos da matriz
-    ret = fwrite(matriz, sizeof(float), tam, descritorBinario);
-    if (ret < tam) {
-        fprintf(stderr, "Erro de escrita no arquivo binário\n");
-        return 4;
-    }
-
-    // finaliza o uso das variáveis
-    fclose(descritorBinario);
     free(matriz);
     return 0;
 }

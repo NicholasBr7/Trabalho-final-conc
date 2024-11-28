@@ -1,3 +1,15 @@
+/*
+    Esse arquivo realiza a eliminação gaussiana de maneira concorrente;
+    Passa-se um arquivo txt com uma matriz aumentada (caso contrário teremos erro),
+    um número de threads necessárias, calcula-se a matriz escalonada reduzida, 
+    realiza-se a substituição reversa, guarda-se o matriz simplificada 
+    e a solução em um arquivo de saída.
+
+    Entrada: ./nomeArquivo matriz.txt saidaConc.txt nThreads
+    Saída: arquivo txt saidaConc.txt
+    Console: tempos de inicialização, processamento e finalização
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -10,11 +22,12 @@ pthread_cond_t cond;
 int bloqueadas = 0;
 
 typedef struct {
-    int id;           // Identificador da thread
-    int dim;          // Dimensão da matriz
-    double** matriz;  // Matriz aumentada
+    int id;           
+    int dim;          
+    double** matriz;  
 } tArgs;
 
+//Função de barreira fornecida pela professora
 void barreira(int nthreads) {
     pthread_mutex_lock(&mutex); // Início da seção crítica
     if (bloqueadas == (nthreads - 1)) { 
@@ -94,16 +107,11 @@ void *eliminacao_gaussiana(void *arg) {
     double** matriz = args->matriz;
 
     for (int k = 0; k < n; k++) {
-        // Apenas a thread mestre verifica o pivô
         if (args->id == 0 && fabs(matriz[k][k]) < 1e-9) {
             fprintf(stderr, "Erro: pivô zero encontrado na linha %d.\n", k);
             exit(EXIT_FAILURE);
         }
 
-        // Sincroniza as threads antes da etapa
-        barreira(nThreads);
-
-        // Eliminação paralela
         for (int i = k + 1 + args->id; i < n; i += nThreads) {
             double fator = matriz[i][k] / matriz[k][k];
             for (int j = k; j <= n; j++) {
@@ -111,7 +119,6 @@ void *eliminacao_gaussiana(void *arg) {
             }
         }
 
-        // Sincroniza após a eliminação
         barreira(nThreads);
     }
 
@@ -128,7 +135,15 @@ void escreve_matriz_arquivo(int linhas, int colunas, double **matriz, double* so
     fprintf(arquivo, "Matriz\n");
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
-            fprintf(arquivo, "%.3lf ", matriz[i][j]);
+            if(fabs(matriz[i][j]) < 1e-3){
+                fprintf(arquivo, "%.3lf", 0.000);
+            }
+            else{
+                fprintf(arquivo, "%.3lf", matriz[i][j]);
+            }
+            if (j < colunas - 1) {
+                fprintf(arquivo, " ");
+            }
         }
         fprintf(arquivo, "\n");
     }
@@ -215,5 +230,7 @@ int main(int argc, char* argv[]) {
 
     return 1;
 }
+
+
 
 
